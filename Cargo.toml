@@ -1,0 +1,17 @@
+[package]
+name = "aoc2024-rust"
+version = "0.0.0"
+edition = "2021"
+default-run = "day6_part2"
+
+[profile.release]
+codegen-units = 1
+lto = "thin"
+# lto = "fat"
+opt-level = 3
+#opt-level = "z"
+panic = "abort"
+strip = true
+#target-cpu = "native" -> RUSTFLAGS='-C target-cpu=native'
+
+[dependencies]
