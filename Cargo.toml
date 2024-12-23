@@ -15,4 +15,5 @@ strip = true
 #target-cpu = "native" -> RUSTFLAGS='-C target-cpu=native'
 
 [dependencies]
+itertools = "0.13.0"
 rayon = "1.10.0"

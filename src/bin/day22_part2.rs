@@ -7,9 +7,10 @@
 	unused_variables,
 )]
 
-use std::fs;
+use std::{fs, iter::repeat_n};
 
-// use rayon::iter::{IntoParallelIterator, ParallelIterator};
+use itertools::Itertools;
+use rayon::iter::{ParallelBridge, ParallelIterator};
 
 
 fn main() {
@@ -30,27 +31,61 @@ fn solve_text(text: &str) -> u64 {
 	let ss = parse_input(&text);
 	let sss: Vec<Vec<u64>> = ss.iter().map(|&s| evolve_seq(2000, s)).collect();
 	let dss: Vec<Vec<i64>> = sss.iter().map(|ss| deltas(ss)).collect();
-	let mut max_bananas: u64 = 0;
-	for ds1 in -9..=9 {
-		for ds2 in -9..=9 {
-			for ds3 in -9..=9 {
-				for ds4 in -9..=9 {
-					let ds_4 = [ds1, ds2, ds3, ds4];
-					println!("ds_4 = {ds_4:?}");
-					// println!("\n\n\nds_4 = {ds_4:?}");
-					let bananas = bananas_with_ds4_total(&sss, &dss, ds_4);
-					// if bananas >= 23 {
-					// 	println!("ds_4:\t{ds1}\t{ds2}\t{ds3}\t{ds4}");
-					// 	println!("bananas = {bananas}");
-					// }
-					max_bananas = max_bananas.max(bananas);
-					// if ds_4 == [-2,1,-1,3] { return max_bananas }
-					// if ds_4 == [-3,0,-1,-3] { return max_bananas }
-				}
-			}
-		}
-	}
-	max_bananas
+
+	// single-threaded:
+	// let mut max_bananas: u64 = 0;
+	// for ds1 in -9 ..= 9 {
+	// 	for ds2 in -9 ..= 9 {
+	// 		for ds3 in -9 ..= 9 {
+	// 			for ds4 in -9 ..= 9 {
+	// 				let ds_4 = [ds1, ds2, ds3, ds4];
+	// 				println!("ds_4 = {ds_4:?}");
+	// 				// println!("\n\n\nds_4 = {ds_4:?}");
+	// 				let bananas = bananas_with_ds4_total(&sss, &dss, ds_4);
+	// 				// if bananas >= 23 {
+	// 				// 	println!("ds_4:\t{ds1}\t{ds2}\t{ds3}\t{ds4}");
+	// 				// 	println!("bananas = {bananas}");
+	// 				// }
+	// 				max_bananas = max_bananas.max(bananas);
+	// 				// if ds_4 == [-2,1,-1,3] { return max_bananas }
+	// 				// if ds_4 == [-3,0,-1,-3] { return max_bananas }
+	// 			}
+	// 		}
+	// 	}
+	// }
+	// max_bananas
+
+	// mutli-threaded:
+	// let max_bananas: Vec<u64> = (-9 ..= 9)
+	// 	.into_par_iter()
+	// 	.map(|ds1| {
+	// 		// println!("ds1:\t{ds1}");
+	// 		let mut max_bananas: u64 = 0;
+	// 		for ds2 in -9 ..= 9 {
+	// 			println!("ds12:\t{ds1}\t{ds2}");
+	// 			for ds3 in -9 ..= 9 {
+	// 				for ds4 in -9 ..= 9 {
+	// 					let ds_4 = [ds1, ds2, ds3, ds4];
+	// 					let bananas = bananas_with_ds4_total(&sss, &dss, ds_4);
+	// 					max_bananas = max_bananas.max(bananas);
+	// 				}
+	// 			}
+	// 		}
+	// 		max_bananas
+	// 	})
+	// 	.collect();
+	// max_bananas.into_iter().max().unwrap()
+
+	// mutli-threaded with itertools:
+	repeat_n(-9 ..= 9, 4)
+		.multi_cartesian_product()
+		.par_bridge()
+		.map(|ds_4| {
+			// println!("ds_4 = {ds_4:?}");
+			bananas_with_ds4_total(&sss, &dss, ds_4.try_into().unwrap())
+		})
+		.max()
+		.unwrap()
 }
 
 fn parse_input(input: &str) -> Vec<u64> {
@@ -70,12 +105,11 @@ fn evolve_seq(n: u64, mut s: u64) -> Vec<u64> {
 	seq
 }
 
-fn evolve(s: u64) -> u64 {
-	let mut s: u128 = s as u128;
+fn evolve(mut s: u64) -> u64 {
 	s = ((s << 6) ^ s) % 16777216; // | (1 <<< 24)
 	s = ((s >> 5) ^ s) % 16777216;
 	s = ((s << 11)^ s) % 16777216;
-	s as u64
+	s
 }
 
 fn deltas(ss: &Vec<u64>) -> Vec<i64> {
@@ -93,34 +127,17 @@ fn deltas(ss: &Vec<u64>) -> Vec<i64> {
 }
 
 fn bananas_with_ds4_total(sss: &Vec<Vec<u64>>, dss: &Vec<Vec<i64>>, ds_4: [i64; 4]) -> u64 {
-	let tmp: Vec<u64> =
 	sss.iter().zip(dss)
 		.map(|(ss, ds)| bananas_with_ds4(ss, ds, ds_4))
-		.collect(); // FIXME: remove me
-	// println!("pre_res = {tmp:?}, sum = {}", tmp.iter().sum::<u64>());
-	tmp.into_iter()
 		.sum()
 }
 
 fn bananas_with_ds4(ss: &Vec<u64>, ds: &Vec<i64>, ds_4: [i64; 4]) -> u64 {
 	let index = ds.windows(4).position(|abcd| abcd == ds_4);
-	// println!(
-	// 	"index = {index:?},\tss[i] = {ss_i:?},\tss around = [{ss_around:?}]",
-	// 	ss_i = index.map(|i| ss[i]),
-	// 	ss_around = index.map(|i| ss[i.saturating_sub(5)..i+5].iter().map(|s| s % 10).collect::<Vec<_>>()),
-	// );
 	index.map(|i| ss[i+4] % 10).unwrap_or(0)
 }
 
 
-
-// #[test]
-// fn bananas_with_ds4_total_() {
-// 	assert_eq!(
-// 		6,
-// 		solve_text(text)
-// 	)
-// }
 
 #[test]
 fn bananas_with_ds4_() {
