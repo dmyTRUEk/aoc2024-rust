@@ -7,23 +7,38 @@
 
 use std::fs;
 
-use rayon::iter::{IntoParallelIterator, ParallelIterator};
+// use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 
 fn main() {
-	let solution = solve("./input/dayTODO_input.txt");
+	let solution = solve_file("./input/dayTODO_input.txt");
 	println!("{solution}");
 }
 
-fn solve(filepath: &str) -> usize {
-	let text = fs::read_to_string(filepath).unwrap();
+fn solve_file(filepath: &str) -> u64 {
+	let text = read_file_to_string(filepath);
+	solve_text(&text)
+}
+
+fn read_file_to_string(filepath: &str) -> String {
+	fs::read_to_string(filepath).unwrap()
+}
+
+fn solve_text(text: &str) -> u64 {
+	let TODO = parse_input(&text);
 	todo!()
 }
 
+fn parse_input(input: &str) -> TODO {
+	todo!()
+}
+
+
+
 #[test]
-fn test_example() {
+fn example_1() {
 	assert_eq!(
-		todo!("expected answer") as usize,
-		solve("./input/dayTODO_example.txt")
+		todo!("expected answer") as u64,
+		solve_file("./input/dayTODO_example_1.txt")
 	)
 }
