@@ -37,13 +37,15 @@ fn solve_text(text: &str) -> u64 {
 				for ds4 in -9..=9 {
 					let ds_4 = [ds1, ds2, ds3, ds4];
 					println!("ds_4 = {ds_4:?}");
+					// println!("\n\n\nds_4 = {ds_4:?}");
 					let bananas = bananas_with_ds4_total(&sss, &dss, ds_4);
-					if bananas >= 23 {
-						println!("ds_4:\t{ds1}\t{ds2}\t{ds3}\t{ds4}");
-						println!("bananas = {bananas}");
-					}
-					if ds_4 == [-2,1,-1,3] { return 0 }
+					// if bananas >= 23 {
+					// 	println!("ds_4:\t{ds1}\t{ds2}\t{ds3}\t{ds4}");
+					// 	println!("bananas = {bananas}");
+					// }
 					max_bananas = max_bananas.max(bananas);
+					// if ds_4 == [-2,1,-1,3] { return max_bananas }
+					// if ds_4 == [-3,0,-1,-3] { return max_bananas }
 				}
 			}
 		}
@@ -95,19 +97,19 @@ fn bananas_with_ds4_total(sss: &Vec<Vec<u64>>, dss: &Vec<Vec<i64>>, ds_4: [i64; 
 	sss.iter().zip(dss)
 		.map(|(ss, ds)| bananas_with_ds4(ss, ds, ds_4))
 		.collect(); // FIXME: remove me
-	println!("pre_res = {tmp:?}"); tmp.into_iter()
+	// println!("pre_res = {tmp:?}, sum = {}", tmp.iter().sum::<u64>());
+	tmp.into_iter()
 		.sum()
 }
 
 fn bananas_with_ds4(ss: &Vec<u64>, ds: &Vec<i64>, ds_4: [i64; 4]) -> u64 {
 	let index = ds.windows(4).position(|abcd| abcd == ds_4);
-	println!(
-		"index = {index:?}, ss around = [{ssm1:?}, {ssh:?}, {ssp1:?}]",
-		ssm1=index.map(|i| ss[i-1] % 10),
-		ssh =index.map(|i| ss[i  ] % 10),
-		ssp1=index.map(|i| ss[i+1] % 10),
-	);
-	index.map(|i| ss[i] % 10).unwrap_or(0)
+	// println!(
+	// 	"index = {index:?},\tss[i] = {ss_i:?},\tss around = [{ss_around:?}]",
+	// 	ss_i = index.map(|i| ss[i]),
+	// 	ss_around = index.map(|i| ss[i.saturating_sub(5)..i+5].iter().map(|s| s % 10).collect::<Vec<_>>()),
+	// );
+	index.map(|i| ss[i+4] % 10).unwrap_or(0)
 }
 
 
