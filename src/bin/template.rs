@@ -29,7 +29,7 @@ fn solve_text(text: &str) -> u64 {
 	todo!()
 }
 
-fn parse_input(input: &str) -> TODO {
+fn parse_input(input: &str) -> (/*TODO*/) {
 	todo!()
 }
 
